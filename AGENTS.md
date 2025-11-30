@@ -1,14 +1,14 @@
 # Vision general
 - Aplicacion de calendario mensual hecha con FastHTML (Starlette + HTMX + fastlite). Estructura modular en `app/` (rutas, componentes, i18n, db) con assets estaticos en `assets/` y la base SQLite en `data/calendar.db`.
 - Dependencias de runtime: Python 3.10+, paquete `fasthtml` (incluye fastlite/uvicorn/htmx). Emoji picker llega por CDN (`emoji-picker-element`), sin bundling extra. No hay `requirements.txt`.
-- `serve()` al final de `main.py` levanta el server en el puerto 5001; `fast_app(live=True)` habilita autoreload.
+- `serve()` en `main.py` levanta el server en el puerto 5001; `fast_app(live=True)` habilita autoreload.
 
 # Datos y modelos
 - DB SQLite `data/calendar.db`; tablas creadas en arranque si faltan:
   - `categories`: `id` (pk int), `name`, `icon`, `color`.
   - `events`: `id` (pk int), `category_id` (FK a categories), `date` (YYYY-MM-DD), `note`.
 - fastlite expone tablas como `db.t.categories`/`db.t.events`; se crean dataclasses `Category` y `Event` via `.dataclass()`.
-- Para limpiar datos basta borrar `calendar.db` (no hay migraciones).
+- Para limpiar datos basta borrar `data/calendar.db` (no hay migraciones). Si existe `calendar.db` en la raiz, se copia automaticamente a `data/`.
 
 # Rutas y flujo HTMX
 - `/`: vista principal; acepta `year`, `month`, `lang`, `filter_cat_id` (GET). Renderiza calendario mensual con filtros por categoria, selector de idioma, toggle de tema y control de navegacion.

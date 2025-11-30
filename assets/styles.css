@@ -276,6 +276,7 @@ body {
 }
 
 /* Categories Page */
+/* Category form */
 .category-form {
     display: flex;
     flex-direction: column;
@@ -287,11 +288,16 @@ body {
     border: 1px solid var(--border-color);
 }
 
-.form-row {
-    display: flex;
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
-    align-items: center;
-    flex-wrap: wrap;
+}
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
 }
 
 .flex-grow {
@@ -489,6 +495,20 @@ emoji-picker {
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .category-form .input-icon,
+    .category-form .input-text,
+    .category-form .color-picker-wrapper {
+        width: 100%;
+    }
+
+    .category-form .color-picker-wrapper {
+        justify-content: space-between;
+    }
+
     .calendar-grid {
         grid-template-columns: 1fr;
     }

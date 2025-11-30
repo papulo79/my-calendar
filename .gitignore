@@ -7,11 +7,11 @@ venv/
 .venv/
 
 # Databases and session key
+data/
 calendar.db
 calendar.db-*
 *.db
 *.db-shm
-*.db-wal
 .sesskey
 
 # OS / editor noise
