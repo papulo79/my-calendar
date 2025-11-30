@@ -1,10 +1,11 @@
 import calendar
 from datetime import datetime
 
-from fasthtml.common import A, Button, Div, FileResponse, Form, H1, H2, H3, Hidden, Input, Main, NotStr, Option, RedirectResponse, Select, Span, Title
+from fasthtml.common import A, Button, Div, FileResponse, Form, H1, H2, H3, Hidden, Img, Input, Main, NotStr, Option, RedirectResponse, Select, Span, Title
 
+from .auth import USERS, clear_user, get_user, set_user, verify_credentials
 from .components import CategoryBadge, DayCell, LangSelector, ThemeToggle
-from .db import Category, Event, categories, events
+from .db import categories, events
 from .i18n import get_lang, get_month_name, t
 
 
@@ -12,20 +13,75 @@ def get_month_calendar(year, month):
     return calendar.Calendar().monthdayscalendar(year, month)
 
 
-def build_daycell_for_date(date_str, categories_map, lang):
+def build_daycell_for_date(date_str, categories_map, lang, owner):
     year, month, day = map(int, date_str.split("-"))
-    day_events = [e for e in events() if e.date == date_str]
+    day_events = events(where="owner=? and date=?", where_args=(owner, date_str)) if owner else []
     cell = DayCell(day, month, year, day_events, categories_map, lang)
     cell.attrs["hx-swap-oob"] = "true"
     return cell
 
 
 def register_routes(app, rt):
+    @rt("/login", methods=["GET"])
+    def login(session, error: str = None, lang: str = None):
+        if lang:
+            session["lang"] = lang
+        curr_lang = get_lang(session)
+        current_user = get_user(session)
+        if current_user:
+            return RedirectResponse("/", status_code=303)
+
+        error_message = t("invalid_credentials", curr_lang) if error else ""
+
+        return Title(t("title", curr_lang)), Main(
+            Div(
+                H1(t("select_user", curr_lang), cls="app-title"),
+                Div(ThemeToggle(), LangSelector(curr_lang), cls="header-actions"),
+                cls="header",
+            ),
+            Form(
+                Div(
+                    Span(t("user", curr_lang), cls="input-label"),
+                    Select(
+                        *(Option(name, value=name) for name in USERS.keys()),
+                        name="username",
+                        cls="input-select",
+                        required=True,
+                    ),
+                    cls="form-field",
+                ),
+                Div(
+                    Span(t("password", curr_lang), cls="input-label"),
+                    Input(type="password", name="password", placeholder=t("password", curr_lang), required=True, cls="input-text"),
+                    cls="form-field",
+                ),
+                Div(Button(t("login", curr_lang), cls="btn primary full-width"), cls="form-actions centered"),
+                action="/login",
+                method="post",
+                cls="login-form",
+            ),
+            Div(error_message, cls=f"form-error {'visible' if error else 'hidden'}"),
+            cls="container narrow",
+        )
+
+    @rt("/login", methods=["POST"])
+    def do_login(username: str, password: str, session):
+        if verify_credentials(username, password):
+            set_user(session, username)
+            return RedirectResponse("/", status_code=303)
+        return login(session, error="1")
+
+    @rt("/logout", methods=["POST"])
+    def logout(session):
+        clear_user(session)
+        return RedirectResponse("/login", status_code=303)
+
     @rt("/", methods=["GET"])
     def home(session, year: int = None, month: int = None, lang: str = None, filter_cat_id: int = None):
         if lang:
             session["lang"] = lang
         curr_lang = get_lang(session)
+        current_user = get_user(session)
 
         now = datetime.now()
         if not year:
@@ -40,11 +96,11 @@ def register_routes(app, rt):
 
         cal_weeks = get_month_calendar(year, month)
 
-        all_events = events()
+        all_events = events(where="owner=?", where_args=(current_user,)) if current_user else []
         if filter_cat_id and filter_cat_id > 0:
             all_events = [e for e in all_events if e.category_id == filter_cat_id]
 
-        cats = categories()
+        cats = categories(where="owner=?", where_args=(current_user,)) if current_user else []
         cats_by_id = {c.id: c for c in cats}
         weekdays = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 
@@ -55,6 +111,17 @@ def register_routes(app, rt):
                 Div(
                     ThemeToggle(),
                     LangSelector(curr_lang),
+                    Form(
+                        Span(current_user, cls="user-label"),
+                        Button(
+                            Img(src="/assets/logout_dark.svg", cls="logout-icon", alt=t("logout", curr_lang), width="16", height="16"),
+                            cls="btn logout-btn small",
+                            title=t("logout", curr_lang),
+                        ),
+                        action="/logout",
+                        method="post",
+                        cls="user-session-form",
+                    ),
                     id="options-panel",
                     cls="options-panel hidden mobile-only",
                 ),
@@ -79,7 +146,22 @@ def register_routes(app, rt):
                     A(t("categories", curr_lang), href="/categories", cls="btn secondary"),
                     cls="header-center",
                 ),
-                Div(ThemeToggle(), LangSelector(curr_lang), cls="header-right desktop-controls"),
+                Div(
+                    ThemeToggle(),
+                    LangSelector(curr_lang),
+                    Form(
+                        Span(current_user, cls="user-label"),
+                        Button(
+                            Img(src="/assets/logout_dark.svg", cls="logout-icon", alt=t("logout", curr_lang), width="16", height="16"),
+                            cls="btn logout-btn small",
+                            title=t("logout", curr_lang),
+                        ),
+                        action="/logout",
+                        method="post",
+                        cls="user-session-form",
+                    ),
+                    cls="header-right desktop-controls",
+                ),
                 cls="header-bar",
             ),
             Div(
@@ -106,8 +188,9 @@ def register_routes(app, rt):
         if lang:
             session["lang"] = lang
         curr_lang = get_lang(session)
+        current_user = get_user(session)
 
-        cats = categories()
+        cats = categories(where="owner=?", where_args=(current_user,)) if current_user else []
         return Title(t("categories", curr_lang)), Main(
             Div(
                 H1(t("manage_categories", curr_lang), cls="app-title"),
@@ -176,20 +259,28 @@ def register_routes(app, rt):
         )
 
     @rt("/categories", methods=["POST"])
-    def create_category(name: str, icon: str, color: str):
-        categories.insert(dict(name=name, icon=icon, color=color))
+    def create_category(name: str, icon: str, color: str, session):
+        owner = get_user(session)
+        categories.insert(dict(name=name, icon=icon, color=color, owner=owner))
         return RedirectResponse("/categories", status_code=303)
 
     @rt("/categories/{id}", methods=["DELETE"])
-    def delete_category(id: int):
+    def delete_category(id: int, session):
+        owner = get_user(session)
+        cat_list = categories(where="owner=? and id=?", where_args=(owner, id))
+        if not cat_list:
+            return ""
+        for ev in events(where="owner=? and category_id=?", where_args=(owner, id)):
+            events.delete(ev.id)
         categories.delete(id)
         return ""
 
     @rt("/day/{date}")
     def day_modal(session, date: str):
         curr_lang = get_lang(session)
-        day_events = [e for e in events() if e.date == date]
-        cats_by_id = {c.id: c for c in categories()}
+        owner = get_user(session)
+        day_events = events(where="owner=? and date=?", where_args=(owner, date)) if owner else []
+        cats_by_id = {c.id: c for c in categories(where="owner=?", where_args=(owner,))} if owner else {}
 
         return Div(
             Div(
@@ -235,30 +326,38 @@ def register_routes(app, rt):
         )
 
     @rt("/events", methods=["POST"])
-    def create_event(ev: Event, session):
-        new_id = events.insert(ev)
-        cats_by_id = {c.id: c for c in categories()}
-        cat = cats_by_id.get(ev.category_id)
+    def create_event(category_id: int, date: str, note: str = "", session = None):
+        owner = get_user(session)
+        cats_by_id = {c.id: c for c in categories(where="owner=?", where_args=(owner,))}
+        cat = cats_by_id.get(category_id)
+        if not cat:
+            return ""
+
+        ev_data = dict(category_id=category_id, date=date, note=note, owner=owner)
+        new_id = events.insert(ev_data)
 
         new_event_item = Div(
             CategoryBadge(cat),
-            Span(ev.note, cls="event-note"),
+            Span(note, cls="event-note"),
             Button("✕", hx_delete=f"/events/{new_id}", hx_target="closest .event-item", cls="btn-icon delete-small"),
             cls="event-item",
         ) if cat else ""
 
         lang = get_lang(session)
-        updated_day_cell = build_daycell_for_date(ev.date, cats_by_id, lang)
+        updated_day_cell = build_daycell_for_date(date, cats_by_id, lang, owner)
 
         return new_event_item, updated_day_cell
 
     @rt("/events/{id}", methods=["DELETE"])
     def delete_event(id: int, session):
+        owner = get_user(session)
         ev = events[id]
+        if not ev or ev.owner != owner:
+            return ""
         events.delete(id)
-        cats_by_id = {c.id: c for c in categories()}
+        cats_by_id = {c.id: c for c in categories(where="owner=?", where_args=(owner,))}
         lang = get_lang(session)
-        updated_day_cell = build_daycell_for_date(ev.date, cats_by_id, lang)
+        updated_day_cell = build_daycell_for_date(ev.date, cats_by_id, lang, owner)
         return updated_day_cell
 
     @rt("/assets/{fname:path}")

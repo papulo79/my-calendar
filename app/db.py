@@ -1,3 +1,4 @@
+import sqlite3
 from pathlib import Path
 
 from fasthtml.common import database
@@ -16,18 +17,27 @@ db = database(str(DB_PATH))
 categories = db.t.categories
 events = db.t.events
 
-if categories not in db.t:
-    categories.create(id=int, name=str, icon=str, color=str, pk="id")
+# Ensure schema (transform=True applies column additions on existing tables)
+categories.create(id=int, name=str, icon=str, color=str, owner=str, pk="id", transform=True)
+events.create(
+    id=int,
+    category_id=int,
+    date=str,
+    note=str,
+    owner=str,
+    pk="id",
+    foreign_keys=[("category_id", "categories")],
+    transform=True,
+)
 
-if events not in db.t:
-    events.create(
-        id=int,
-        category_id=int,
-        date=str,
-        note=str,
-        pk="id",
-        foreign_keys=[("category_id", "categories")],
-    )
+# Backfill owner for legacy rows so they remain visible for the default user
+def backfill_owner(default_owner: str = "Pablo"):
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute("UPDATE categories SET owner=? WHERE owner IS NULL OR owner=''", (default_owner,))
+        conn.execute("UPDATE events SET owner=? WHERE owner IS NULL OR owner=''", (default_owner,))
+        conn.commit()
+
+backfill_owner()
 
 Category = categories.dataclass()
 Event = events.dataclass()

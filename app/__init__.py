@@ -1,5 +1,6 @@
-from fasthtml.common import Link, Script, fast_app
+from fasthtml.common import Beforeware, Link, RedirectResponse, Script, fast_app
 
+from .auth import get_user
 from .routes import register_routes
 
 
@@ -19,7 +20,19 @@ def build_headers():
 
 
 # Build the app and register all routes up-front
-app, rt = fast_app(hdrs=build_headers(), live=True)
+def auth_before(req, sess):
+    # Persist current user in the request scope for downstream handlers
+    sess_user = get_user(sess)
+    req.scope["user"] = sess_user
+    if req.url.path == "/login" or req.url.path.startswith("/assets"):
+        return
+    if not sess_user:
+        return RedirectResponse("/login", status_code=303)
+
+
+beforeware = Beforeware(auth_before, skip=[r"/assets/.*", r"/favicon\.ico", "/login"])
+
+app, rt = fast_app(hdrs=build_headers(), live=True, before=beforeware)
 register_routes(app, rt)
 
 __all__ = ["app"]

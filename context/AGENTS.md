@@ -8,7 +8,7 @@
   - `categories`: `id` (pk int), `name`, `icon`, `color`.
   - `events`: `id` (pk int), `category_id` (FK a categories), `date` (YYYY-MM-DD), `note`.
 - fastlite expone tablas como `db.t.categories`/`db.t.events`; se crean dataclasses `Category` y `Event` via `.dataclass()`.
-- Para limpiar datos basta borrar `calendar.db` (no hay migraciones).
+- Para limpiar datos basta borrar `data/calendar.db` (no hay migraciones). Si existe `calendar.db` en la raiz, se copia automaticamente a `data/`.
 
 # Rutas y flujo HTMX
 - `/`: vista principal; acepta `year`, `month`, `lang`, `filter_cat_id` (GET). Renderiza calendario mensual con filtros por categoria, selector de idioma, toggle de tema y control de navegacion.
@@ -18,7 +18,8 @@
 - `/day/{date}` GET: devuelve modal HTMX con eventos del dia y formulario para agregar.
 - `/events` POST: inserta evento; devuelve item para la lista del modal + `DayCell` re-renderizado con `hx-swap-oob` (respeta idioma de sesion).
 - `/events/{id}` DELETE: borra evento y devuelve `DayCell` actualizado con `hx-swap-oob` (respeta idioma de sesion).
-- `/assets/{fname:path}`: sirve `assets/styles.css`, `assets/scripts.js` y `assets/favicon.svg` (favicon enlazado en headers).
+- `/assets/{fname:path}`: sirve `assets/styles.css` y `assets/scripts.js`.
+- Favicon en `assets/favicon.svg` enlazado en headers.
 
 - Componentes clave en `app/components.py`: `CategoryBadge`, `LangSelector` (usa `Select` con redireccion por query `?lang=`), `ThemeToggle` (llama a `toggleTheme()` en JS), `DayCell` (calculado por semana/dia; marca hoy; muestra eventos con icono y color de categoria).
 - Traducciones en `TRANSLATIONS`; `get_lang(sess)` lee `lang` desde la sesion y por defecto usa `'es'`. Header incluye selector de idioma y el valor se persiste en sesion via query `lang`.
