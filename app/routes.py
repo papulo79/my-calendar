@@ -50,30 +50,37 @@ def register_routes(app, rt):
 
         return Title(t("title", curr_lang)), Main(
             Div(
-                H1(t("my_calendar", curr_lang), cls="app-title"),
-                Div(ThemeToggle(), LangSelector(curr_lang), cls="header-controls-top"),
-                cls="header-top",
-            ),
-            Div(
-                Form(
-                    Hidden(name="lang", value=curr_lang),
-                    Hidden(name="year", value=year),
-                    Hidden(name="month", value=month),
-                    Select(
-                        Option(t("all_categories", curr_lang), value="0"),
-                        *[
-                            Option(f"{c.icon} {c.name}", value=c.id, selected=(c.id == filter_cat_id))
-                            for c in cats
-                        ],
-                        name="filter_cat_id",
-                        onchange="this.form.submit()",
-                        cls="input-select filter-select",
-                    ),
-                    method="get",
-                    cls="filter-form",
+                Div(H1(t("my_calendar", curr_lang), cls="app-title"), cls="header-left"),
+                Button("⋮", cls="options-btn mobile-only", onclick="toggleOptionsPanel()"),
+                Div(
+                    ThemeToggle(),
+                    LangSelector(curr_lang),
+                    id="options-panel",
+                    cls="options-panel hidden mobile-only",
                 ),
-                A(t("categories", curr_lang), href="/categories", cls="btn secondary"),
-                cls="header-controls-middle",
+                Div(
+                    Form(
+                        Hidden(name="lang", value=curr_lang),
+                        Hidden(name="year", value=year),
+                        Hidden(name="month", value=month),
+                        Select(
+                            Option(t("all_categories", curr_lang), value="0"),
+                            *[
+                                Option(f"{c.icon} {c.name}", value=c.id, selected=(c.id == filter_cat_id))
+                                for c in cats
+                            ],
+                            name="filter_cat_id",
+                            onchange="this.form.submit()",
+                            cls="input-select filter-select",
+                        ),
+                        method="get",
+                        cls="filter-form",
+                    ),
+                    A(t("categories", curr_lang), href="/categories", cls="btn secondary"),
+                    cls="header-center",
+                ),
+                Div(ThemeToggle(), LangSelector(curr_lang), cls="header-right desktop-controls"),
+                cls="header-bar",
             ),
             Div(
                 A("←", href=f"/?year={prev_year}&month={prev_month}", cls="nav-btn"),

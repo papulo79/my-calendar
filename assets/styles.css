@@ -154,6 +154,7 @@ body {
 
 .filter-select {
     min-width: 200px;
+    margin-bottom: 0px
 }
 
 .month-title {
@@ -586,105 +587,120 @@ emoji-picker {
 }
 
 /* Header Reorganization */
-.header-top {
-    display: flex;
-    justify-content: space-between;
+/* Header layout */
+.header-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
     align-items: center;
+    gap: 1rem;
     margin-bottom: 1rem;
-    flex-wrap: nowrap;
-    /* Prevent wrapping on desktop if possible */
-    gap: 1rem;
 }
 
-.app-title {
-    margin: 0;
-    white-space: nowrap;
+.header-left {
+    min-width: 180px;
 }
 
-.header-controls-top {
+.header-center {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    flex-shrink: 0;
-    /* Prevent controls from shrinking */
-}
-
-.header-controls-middle {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-    gap: 1rem;
-}
-
-.centered-nav {
+    gap: 0.75rem;
     justify-content: center;
-    width: 100%;
-    margin-bottom: 1rem;
+}
+
+.header-center .filter-form {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    justify-content: flex-end;
+}
+
+.desktop-controls {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.mobile-only {
+    display: none !important;
+}
+
+.options-btn {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    line-height: 1;
+}
+
+.options-panel {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    padding: 0.5rem 0.75rem;
+}
+
+.options-panel.hidden {
+    display: none !important;
 }
 
 .lang-select {
     padding: 0.25rem 0.5rem;
     font-size: 0.875rem;
+    margin-bottom: 0;
 }
 
-/* Toggle Switch Removed */
-
-/* Mobile adjustments for new header */
 @media (max-width: 768px) {
-    .header-top {
-        flex-direction: row;
-        flex-wrap: nowrap;
-        /* Force single line */
+    .header-bar {
+        grid-template-columns: 1fr auto;
+        grid-auto-rows: auto;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.5rem 0.75rem;
     }
 
-    .app-title {
-        font-size: 1.25rem;
-        /* Slightly smaller to fit */
-        margin: 0;
-        width: auto;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+    .header-left {
+        grid-column: 1 / 2;
     }
 
-    .header-controls-top {
-        width: auto;
-        justify-content: flex-end;
-        gap: 0.5rem;
-        flex-shrink: 0;
+    .options-btn {
+        grid-column: 2 / 3;
+        justify-self: end;
     }
 
-    .header-controls-middle {
-        flex-direction: row;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .filter-select {
-        width: auto;
-        flex-grow: 1;
-    }
-
-    .btn.secondary {
-        white-space: nowrap;
-    }
-
-    .filter-form {
-        flex-grow: 1;
-    }
-
-    .filter-select {
+    .options-panel {
+        grid-column: 1 / -1;
         width: 100%;
-        margin-bottom: 0;
-        /* Fix mobile margin */
+        justify-content: flex-start;
     }
 
-    .input-select {
-        margin-bottom: 0;
+    .header-center {
+        grid-column: 1 / -1;
+        justify-content: flex-start;
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .header-center .filter-form {
+        width: 100%;
+    }
+
+    .desktop-controls {
+        display: none;
+    }
+
+    .mobile-only {
+        display: inline-flex !important;
     }
 }
 

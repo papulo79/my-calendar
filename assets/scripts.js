@@ -7,6 +7,11 @@ function closeDayModal() {
     document.getElementById('day-modal-container').innerHTML = '';
 }
 
+function toggleOptionsPanel() {
+    const panel = document.getElementById('options-panel');
+    if (panel) panel.classList.toggle('hidden');
+}
+
 // Emoji Picker Logic
 function toggleEmojiPicker() {
     const picker = document.getElementById('emoji-picker-container');
