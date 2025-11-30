@@ -1,0 +1,18 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+venv/
+.venv/
+
+# Databases and session key
+calendar.db
+calendar.db-*
+*.db
+*.db-shm
+*.db-wal
+.sesskey
+
+# OS / editor noise
+.DS_Store
