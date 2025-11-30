@@ -6,6 +6,7 @@ from .routes import register_routes
 def build_headers():
     return (
         Link(rel="stylesheet", href="/assets/styles.css"),
+        Link(rel="icon", href="/assets/favicon.svg", type="image/svg+xml"),
         Link(rel="preconnect", href="https://fonts.googleapis.com"),
         Link(rel="preconnect", href="https://fonts.gstatic.com", crossorigin=""),
         Link(

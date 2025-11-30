@@ -19,6 +19,7 @@ python -m venv .venv
 source .venv/bin/activate   # En Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 python main.py              # Servira en http://localhost:5001 (autoreload activado por live=True)
+# Cambiar el puerto (ejemplo 5011): PORT=5011 python main.py
 ```
 
 `calendar.db` se crea si no existe. Borra el archivo para reiniciar datos.
@@ -33,12 +34,12 @@ python main.py              # Servira en http://localhost:5001 (autoreload activ
 - `main.py`: punto de entrada, solo arranca `serve()` usando la app modular.
 - `app/`: logica principal separada.
   - `__init__.py`: construye `fast_app` con headers y registra rutas.
-  - `routes.py`: controladores HTMX (home, categorias, modales de dias, CRUD de eventos) y assets estaticos.
+  - `routes.py`: controladores HTMX (home, categorias, modales de dias, CRUD de eventos) y assets estaticos. La cabecera se adapta: en desktop va en una sola linea (titulo | filtro + boton categorias | controles tema/idioma) y en movil muestra un boton “⋮” que despliega tema/idioma debajo del titulo.
   - `components.py`: componentes UI (`DayCell`, `LangSelector`, `ThemeToggle`, etc.).
   - `i18n.py`: traducciones y helpers de idioma/mes.
   - `db.py`: inicializa fastlite, crea tablas y expone dataclasses `Category` y `Event` (usa `data/calendar.db`).
-- `assets/styles.css`: tema light/dark, layout del calendario, modales y controles.
-- `assets/scripts.js`: manejo de modal HTMX, emoji picker, toggles de tema e idioma, atajos de teclado (Escape).
+- `assets/styles.css`: tema light/dark, layout del calendario, modales y controles; layout responsivo de cabecera (desktop linea unica, movil con boton de opciones y panel desplegable).
+- `assets/scripts.js`: manejo de modal HTMX, emoji picker, toggles de tema e idioma, boton de opciones en movil, atajos de teclado (Escape).
 - `data/calendar.db`: base de datos SQLite con tablas `categories` y `events` (se autogenera).
 - `context/llms-ctx*.txt`: referencia de FastHTML incluida para el entorno de IA.
 
