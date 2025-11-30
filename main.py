@@ -7,4 +7,5 @@ from app import app
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", "5001"))
-    serve(port=port)
+    host = os.environ.get("HOST", "0.0.0.0")
+    serve(host=host, port=port)
