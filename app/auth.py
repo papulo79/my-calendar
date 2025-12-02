@@ -3,8 +3,8 @@ from typing import Dict
 
 # Simple credential store; override defaults with environment variables if desired
 USERS: Dict[str, str] = {
-    "Pablo": os.environ.get("PABLO_PASSWORD", "***REMOVED***"),
-    "Eva": os.environ.get("EVA_PASSWORD", "***REMOVED***"),
+    "Pablo": os.environ.get("PABLO_PASSWORD", ""),
+    "Eva": os.environ.get("EVA_PASSWORD", ""),
 }
 
 

@@ -16,3 +16,6 @@ calendar.db-*
 
 # OS / editor noise
 .DS_Store
+
+# env
+.env
