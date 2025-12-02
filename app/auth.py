@@ -5,6 +5,7 @@ from typing import Dict
 USERS: Dict[str, str] = {
     "Pablo": os.environ.get("PABLO_PASSWORD", ""),
     "Eva": os.environ.get("EVA_PASSWORD", ""),
+    "Fer": os.environ.get("FER_PASSWORD", ""),
 }
 
 
