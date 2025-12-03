@@ -330,8 +330,131 @@ PABLO_PASSWORD=changeme
 EVA_PASSWORD=changeme
 ```
 
+## 💾 Gestión de la Base de Datos
+
+### ⚠️ IMPORTANTE: Los datos NO se sincronizan con Git
+
+El directorio `data/` y todos los archivos `.db` están en `.gitignore`, por lo que:
+
+- **Los datos NO se copian** al hacer `git push` desde desarrollo
+- **Los datos NO se actualizan** al hacer `git pull` en el servidor
+
+### Estrategia de Datos en Producción
+
+#### Primera Instalación en el Servidor
+
+1. **Clonar el repositorio:**
+   ```bash
+   cd /home/server-paulo/Software
+   git clone <repo-url> my-calendar
+   cd my-calendar
+   ```
+
+2. **Crear estructura de datos:**
+   ```bash
+   mkdir -p data
+   ```
+
+3. **La base de datos se creará automáticamente** al iniciar la aplicación por primera vez
+
+4. **Los usuarios ya están configurados** en `app/auth.py`:
+   - Pablo
+   - Eva
+   - Fer
+   
+   Sus contraseñas se establecen mediante variables de entorno en `.env`
+
+#### Actualizar Código sin Perder Datos
+
+Cuando hagas cambios en el código y quieras actualizar el servidor:
+
+```bash
+# En el servidor
+cd /home/server-paulo/Software/my-calendar
+
+# Detener el servicio
+sudo systemctl stop mycalendar.service
+
+# Actualizar código
+git pull origin main
+
+# Reinstalar dependencias si cambió requirements.txt
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# Reiniciar servicio (los datos en data/ permanecen intactos)
+sudo systemctl start mycalendar.service
+```
+
+**Los datos en `data/calendar.db` NO se tocan** durante el `git pull`.
+
+#### Respaldar la Base de Datos
+
+Es recomendable hacer respaldos periódicos de la base de datos en el servidor:
+
+```bash
+# Crear respaldo manual
+cd /home/server-paulo/Software/my-calendar
+cp data/calendar.db data/calendar.db.backup.$(date +%Y%m%d_%H%M%S)
+
+# O usar el script de respaldo (ver siguiente sección)
+./backup_db.sh
+```
+
+#### Restaurar un Respaldo
+
+```bash
+cd /home/server-paulo/Software/my-calendar
+sudo systemctl stop mycalendar.service
+cp data/calendar.db.backup.YYYYMMDD_HHMMSS data/calendar.db
+sudo systemctl start mycalendar.service
+```
+
+#### Transferir Datos entre Desarrollo y Producción
+
+Si necesitas copiar datos desde tu PC de desarrollo al servidor:
+
+```bash
+# En tu PC de desarrollo
+scp data/calendar.db server-paulo@servidor:/tmp/calendar_temp.db
+
+# En el servidor
+cd /home/server-paulo/Software/my-calendar
+sudo systemctl stop mycalendar.service
+mv /tmp/calendar_temp.db data/calendar.db
+chown server-paulo:server-paulo data/calendar.db
+sudo systemctl start mycalendar.service
+```
+
+#### Verificar Integridad de Datos
+
+```bash
+# Ver usuarios y categorías existentes
+sqlite3 data/calendar.db "SELECT * FROM categories;"
+
+# Ver eventos
+sqlite3 data/calendar.db "SELECT * FROM events;"
+
+# Verificar propietarios (multiusuario)
+sqlite3 data/calendar.db "SELECT DISTINCT owner FROM categories;"
+sqlite3 data/calendar.db "SELECT DISTINCT owner FROM events;"
+```
+
+### Estructura Multiusuario
+
+La aplicación es **multiusuario** desde el diseño:
+
+- Cada usuario (Pablo, Eva, Fer) tiene sus propias categorías y eventos
+- Los datos se filtran automáticamente por el campo `owner` en las tablas
+- Cada usuario solo ve sus propios datos tras autenticarse
+
+**Tablas:**
+- `categories`: almacena categorías con campo `owner`
+- `events`: almacena eventos con campo `owner` y FK a categorías
+
 ## 📚 Referencias
 
 - [Systemd Service Documentation](https://www.freedesktop.org/software/systemd/man/systemd.service.html)
 - [FastHTML Documentation](https://docs.fastht.ml/)
 - [UFW Firewall Guide](https://help.ubuntu.com/community/UFW)
+- [SQLite Documentation](https://www.sqlite.org/docs.html)

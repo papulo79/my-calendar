@@ -7,11 +7,10 @@ venv/
 .venv/
 
 # Databases and session key
-data/
-calendar.db
-calendar.db-*
-*.db
-*.db-shm
+data/*.db
+data/*.db-shm
+data/*.db-wal
+data/backups/
 .sesskey
 
 # OS / editor noise
@@ -19,6 +18,7 @@ calendar.db-*
 
 # env
 .env
+.env.local
 
 # vscode
 .vscode/
