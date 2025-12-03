@@ -494,6 +494,55 @@ body {
     color: var(--text-secondary);
 }
 
+.event-note-input {
+    flex: 1;
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    background-color: var(--card-bg);
+    border: 1px solid var(--accent-color);
+    border-radius: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    outline: none;
+}
+
+.event-actions {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.btn-icon.edit-small,
+.btn-icon.delete-small,
+.btn-icon.save-small,
+.btn-icon.cancel-small {
+    font-size: 0.875rem;
+    padding: 0.25rem 0.35rem;
+    border-radius: 0.25rem;
+}
+
+.btn-icon.edit-small:hover {
+    background-color: rgba(59, 130, 246, 0.2);
+    color: var(--accent-color);
+}
+
+.btn-icon.delete-small:hover {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: var(--danger-color);
+}
+
+.btn-icon.save-small {
+    color: #10b981;
+}
+
+.btn-icon.save-small:hover {
+    background-color: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+}
+
+.btn-icon.cancel-small:hover {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: var(--danger-color);
+}
+
 .event-form {
     padding: 1rem;
     border-top: 1px solid var(--border-color);

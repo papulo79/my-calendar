@@ -293,15 +293,30 @@ def register_routes(app, rt):
                     *(
                         Div(
                             CategoryBadge(cats_by_id[e.category_id]),
-                            Span(e.note, cls="event-note"),
-                            Button(
-                                "✕",
-                                hx_delete=f"/events/{e.id}",
-                                hx_target="closest .event-item",
-                                hx_swap="outerHTML",
-                                cls="btn-icon delete-small",
+                            Span(
+                                e.note,
+                                cls="event-note",
+                                id=f"event-note-{e.id}",
+                            ),
+                            Div(
+                                Button(
+                                    "✏️",
+                                    onclick=f"editEvent({e.id}, '{date}')",
+                                    cls="btn-icon edit-small",
+                                    title=t('edit', curr_lang),
+                                ),
+                                Button(
+                                    "✕",
+                                    hx_delete=f"/events/{e.id}",
+                                    hx_target="closest .event-item",
+                                    hx_swap="outerHTML",
+                                    cls="btn-icon delete-small",
+                                    title=t('delete', curr_lang),
+                                ),
+                                cls="event-actions",
                             ),
                             cls="event-item",
+                            **{"data-event-id": e.id},
                         )
                         for e in day_events
                         if e.category_id in cats_by_id
@@ -370,25 +385,65 @@ def register_routes(app, rt):
         new_row = events.insert(ev_data)
         new_id = getattr(new_row, "id", new_row)
 
+        lang = get_lang(session)
         new_event_item = Div(
             CategoryBadge(cat),
-            Span(note, cls="event-note"),
-            Button(
-                "✕",
-                hx_delete=f"/events/{new_id}",
-                hx_target="closest .event-item",
-                hx_swap="outerHTML",
-                cls="btn-icon delete-small",
+            Span(note, cls="event-note", id=f"event-note-{new_id}"),
+            Div(
+                Button(
+                    "✏️",
+                    onclick=f"editEvent({new_id}, '{date}')",
+                    cls="btn-icon edit-small",
+                    title=t('edit', lang),
+                ),
+                Button(
+                    "✕",
+                    hx_delete=f"/events/{new_id}",
+                    hx_target="closest .event-item",
+                    hx_swap="outerHTML",
+                    cls="btn-icon delete-small",
+                    title=t('delete', lang),
+                ),
+                cls="event-actions",
             ),
             cls="event-item",
+            **{"data-event-id": new_id},
         ) if cat else ""
 
-        lang = get_lang(session)
         updated_day_cell = build_daycell_for_date(
             date, cats_by_id, lang, owner
         )
 
         return new_event_item, updated_day_cell
+
+    @rt("/events/{id}", methods=["PUT"])
+    async def update_event(id: int, session, request):
+        owner = get_user(session)
+        ev = events[id]
+        if not ev or ev.owner != owner:
+            return ""
+        
+        # Obtener datos del formulario
+        form_data = await request.form()
+        note = form_data.get("note", "")
+        
+        # Actualizar el evento con un diccionario
+        events.update({"id": id, "note": note})
+        
+        # Obtener categorías para actualizar el calendario
+        cats_by_id = {
+            c.id: c
+            for c in categories(where="owner=?", where_args=(owner,))
+        }
+        lang = get_lang(session)
+        
+        # Devolver el span actualizado y el DayCell actualizado
+        updated_span = Span(note, cls="event-note", id=f"event-note-{id}")
+        updated_day_cell = build_daycell_for_date(
+            ev.date, cats_by_id, lang, owner
+        )
+        
+        return updated_span, updated_day_cell
 
     @rt("/events/{id}", methods=["DELETE"])
     def delete_event(id: int, session):

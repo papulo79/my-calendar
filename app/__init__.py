@@ -15,7 +15,7 @@ def build_headers():
             rel="stylesheet",
         ),
         Script(src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js", type="module"),
-        Script(src="/assets/scripts.js"),
+        Script(src="/assets/scripts.js?v=1.2"),
     )
 
 
