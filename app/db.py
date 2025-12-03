@@ -13,7 +13,12 @@ LEGACY_DB_PATH = BASE_DIR / "calendar.db"
 if LEGACY_DB_PATH.exists() and not DB_PATH.exists():
     DB_PATH.write_bytes(LEGACY_DB_PATH.read_bytes())
 
+# Configurar SQLite para deshabilitar WAL y usar modo DELETE
+# Esto asegura que los commits sean inmediatos y visibles
 db = database(str(DB_PATH))
+# APSW ejecuta los comandos inmediatamente, no necesita commit()
+db.conn.execute("PRAGMA journal_mode=DELETE")
+db.conn.execute("PRAGMA synchronous=FULL")
 categories = db.t.categories
 events = db.t.events
 
