@@ -19,3 +19,6 @@ calendar.db-*
 
 # env
 .env
+
+# vscode
+.vscode/

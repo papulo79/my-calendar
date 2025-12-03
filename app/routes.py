@@ -294,7 +294,13 @@ def register_routes(app, rt):
                         Div(
                             CategoryBadge(cats_by_id[e.category_id]),
                             Span(e.note, cls="event-note"),
-                            Button("✕", hx_delete=f"/events/{e.id}", hx_target="closest .event-item", cls="btn-icon delete-small"),
+                            Button(
+                                "✕",
+                                hx_delete=f"/events/{e.id}",
+                                hx_target="closest .event-item",
+                                hx_swap="outerHTML",
+                                cls="btn-icon delete-small",
+                            ),
                             cls="event-item",
                         )
                         for e in day_events
@@ -305,14 +311,27 @@ def register_routes(app, rt):
                 ),
                 Form(
                     Select(
-                        *(Option(f"{c.icon} {c.name}", value=c.id) for c in cats_by_id.values()),
+                        *(
+                            Option(
+                                f"{c.icon} {c.name}",
+                                value=c.id,
+                            )
+                            for c in cats_by_id.values()
+                        ),
                         name="category_id",
                         required=True,
                         cls="input-select",
                     ),
-                    Input(name="note", placeholder=t("add_note", curr_lang), cls="input-text"),
+                    Input(
+                        name="note",
+                        placeholder=t("add_note", curr_lang),
+                        cls="input-text",
+                    ),
                     Input(type="hidden", name="date", value=date),
-                    Button(t("add_event", curr_lang), cls="btn primary full-width"),
+                    Button(
+                        t("add_event", curr_lang),
+                        cls="btn primary full-width",
+                    ),
                     hx_post="/events",
                     hx_target="#day-events-list",
                     hx_swap="beforeend",
@@ -326,25 +345,48 @@ def register_routes(app, rt):
         )
 
     @rt("/events", methods=["POST"])
-    def create_event(category_id: int, date: str, note: str = "", session = None):
+    def create_event(
+        category_id: int,
+        date: str,
+        note: str = "",
+        session=None,
+    ):
         owner = get_user(session)
-        cats_by_id = {c.id: c for c in categories(where="owner=?", where_args=(owner,))}
+        cats_by_id = {
+            c.id: c
+            for c in categories(where="owner=?", where_args=(owner,))
+        }
         cat = cats_by_id.get(category_id)
         if not cat:
             return ""
 
-        ev_data = dict(category_id=category_id, date=date, note=note, owner=owner)
-        new_id = events.insert(ev_data)
+        ev_data = dict(
+            category_id=category_id,
+            date=date,
+            note=note,
+            owner=owner,
+        )
+        # events.insert may return the inserted row id or a dataclass instance.
+        new_row = events.insert(ev_data)
+        new_id = getattr(new_row, "id", new_row)
 
         new_event_item = Div(
             CategoryBadge(cat),
             Span(note, cls="event-note"),
-            Button("✕", hx_delete=f"/events/{new_id}", hx_target="closest .event-item", cls="btn-icon delete-small"),
+            Button(
+                "✕",
+                hx_delete=f"/events/{new_id}",
+                hx_target="closest .event-item",
+                hx_swap="outerHTML",
+                cls="btn-icon delete-small",
+            ),
             cls="event-item",
         ) if cat else ""
 
         lang = get_lang(session)
-        updated_day_cell = build_daycell_for_date(date, cats_by_id, lang, owner)
+        updated_day_cell = build_daycell_for_date(
+            date, cats_by_id, lang, owner
+        )
 
         return new_event_item, updated_day_cell
 
@@ -355,10 +397,18 @@ def register_routes(app, rt):
         if not ev or ev.owner != owner:
             return ""
         events.delete(id)
-        cats_by_id = {c.id: c for c in categories(where="owner=?", where_args=(owner,))}
+        cats_by_id = {
+            c.id: c
+            for c in categories(where="owner=?", where_args=(owner,))
+        }
         lang = get_lang(session)
-        updated_day_cell = build_daycell_for_date(ev.date, cats_by_id, lang, owner)
-        return updated_day_cell
+        updated_day_cell = build_daycell_for_date(
+            ev.date, cats_by_id, lang, owner
+        )
+        # Return an empty main response so HTMX removes the targeted
+        # element (the event item). The updated day cell is returned
+        # alongside as an out-of-band fragment to refresh the calendar.
+        return "", updated_day_cell
 
     @rt("/assets/{fname:path}")
     def assets(fname: str):
